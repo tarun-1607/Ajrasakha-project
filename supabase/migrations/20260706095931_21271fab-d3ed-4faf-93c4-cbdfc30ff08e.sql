@@ -1,0 +1,1 @@
+ALTER TABLE public.golden_answers ADD COLUMN IF NOT EXISTS category text, ADD COLUMN IF NOT EXISTS state text;
