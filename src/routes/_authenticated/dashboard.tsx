@@ -14,6 +14,14 @@ import { useLanguage } from "@/hooks/use-language";
 import { LanguagePicker } from "@/components/ajrasakha/language-picker";
 import { FarmMap } from "@/components/ajrasakha/farm-map";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   MessageSquarePlus,
   History,
   UserRound,
@@ -29,6 +37,8 @@ import {
   Leaf,
   ShieldCheck,
   Compass,
+  ExternalLink,
+  Search,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -58,6 +68,8 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showSchemesModal, setShowSchemesModal] = useState(false);
+  const [schemesSearch, setSchemesSearch] = useState("");
   const checkAdmin = useServerFn(isCurrentUserAdmin);
 
   const getGreeting = () => {
@@ -367,7 +379,7 @@ function DashboardPage() {
               icon={<Landmark className="size-5" />}
               title={t("actions.schemes")}
               desc={t("actions.schemesDesc")}
-              onClick={() => toast.info("Government schemes coming soon")}
+              onClick={() => setShowSchemesModal(true)}
               accent="primary"
             />
             <QuickAction
@@ -452,6 +464,14 @@ function DashboardPage() {
           </Card>
         </section>
       </main>
+
+      <SchemesDialog
+        open={showSchemesModal}
+        onOpenChange={setShowSchemesModal}
+        search={schemesSearch}
+        onSearchChange={setSchemesSearch}
+        onAsk={goAsk}
+      />
     </div>
   );
 }
@@ -564,5 +584,214 @@ function AdvisoryItem({ text }: { text: string }) {
       <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
       <span className="text-foreground/80">{text}</span>
     </li>
+  );
+}
+
+const CENTRAL_SCHEMES = [
+  {
+    id: "pm-kisan",
+    name: "PM-KISAN (Kisan Samman Nidhi)",
+    nameLocal: "पीएम-किसान (किसान सम्मान निधि)",
+    authority: "Ministry of Agriculture, GoI",
+    benefit: "₹6,000 yearly direct income support in 3 installments of ₹2,000 directly to farmer bank accounts.",
+    eligibility: "All small and marginal landholding farmer families in India.",
+    applyUrl: "https://pmkisan.gov.in/",
+    tags: ["Direct Income Support", "₹6000/year"],
+  },
+  {
+    id: "pmfby",
+    name: "PMFBY (Crop Insurance Yojana)",
+    nameLocal: "पीएम फसल बीमा योजना",
+    authority: "Ministry of Agriculture, GoI",
+    benefit: "Low-premium insurance covering crop losses from drought, floods, pests, and natural calamities.",
+    eligibility: "All food crop, oilseed, and commercial/horticultural crop growers.",
+    applyUrl: "https://pmfby.gov.in/",
+    tags: ["Crop Insurance", "Loss Cover"],
+  },
+  {
+    id: "pmksy",
+    name: "PMKSY (Drip/Sprinkler Irrigation)",
+    nameLocal: "कृषि सिंचाई योजना (ड्रिप/स्प्रिंकलर)",
+    authority: "Department of Agriculture, GoI",
+    benefit: "55% to 80% government subsidy to purchase and install water-saving micro-irrigation systems.",
+    eligibility: "Farmers with cultivable land and access to a water source.",
+    applyUrl: "https://pmksy.gov.in/",
+    tags: ["Irrigation Subsidy", "Drip System"],
+  },
+  {
+    id: "smam",
+    name: "SMAM (Subsidies for Farm Equipment)",
+    nameLocal: "कृषि यंत्रीकरण उप-मिशन",
+    authority: "Ministry of Agriculture, GoI",
+    benefit: "40% to 60% financial assistance for purchasing Tractors, Rotavators, Tillers, and Harvesters.",
+    eligibility: "Small, marginal, SC/ST, and women farmers get priority benefits.",
+    applyUrl: "https://agrimachinery.nic.in/",
+    tags: ["Machinery Subsidy", "Equipment"],
+  },
+  {
+    id: "kcc",
+    name: "KCC (Kisan Credit Card)",
+    nameLocal: "किसान क्रेडिट कार्ड",
+    authority: "NABARD & Commercial Banks",
+    benefit: "Short-term farm credit and cultivation loans up to ₹3 Lakhs at a highly concessional interest rate of 4%.",
+    eligibility: "All cultivators, tenant farmers, dairy farmers, and fishers.",
+    applyUrl: "https://www.pmkisan.gov.in/",
+    tags: ["Concessional Loan", "Credit"],
+  },
+  {
+    id: "soil-health",
+    name: "Soil Health Card Scheme",
+    nameLocal: "मृदा स्वास्थ्य कार्ड योजना",
+    authority: "Department of Agriculture, GoI",
+    benefit: "Free soil testing card every 2 years showing nutrient status and fertilizer recommendation for fields.",
+    eligibility: "All farmers having cultivable land holdings.",
+    applyUrl: "https://soilhealth.dac.gov.in/",
+    tags: ["Free Soil Testing", "Soil Health"],
+  },
+];
+
+function SchemesDialog({
+  open,
+  onOpenChange,
+  search,
+  onSearchChange,
+  onAsk,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  search: string;
+  onSearchChange: (s: string) => void;
+  onAsk: () => void;
+}) {
+  const filteredSchemes = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return CENTRAL_SCHEMES;
+    return CENTRAL_SCHEMES.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.nameLocal.toLowerCase().includes(q) ||
+        s.benefit.toLowerCase().includes(q) ||
+        s.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }, [search]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl p-6">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
+            <Landmark className="size-5 text-primary" />
+            Government Schemes & Subsidies
+          </DialogTitle>
+          <DialogDescription>
+            Browse the latest agricultural support schemes or look up details.
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Search Bar */}
+        <div className="relative my-2">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search schemes (e.g. drip, insurance, ₹6000)..."
+            className="pl-9"
+          />
+        </div>
+
+        {/* List */}
+        <div className="space-y-4 py-2">
+          {filteredSchemes.length === 0 ? (
+            <div className="text-center py-8 text-sm text-muted-foreground">
+              No matching schemes found.
+            </div>
+          ) : (
+            filteredSchemes.map((scheme) => (
+              <div
+                key={scheme.id}
+                className="group relative rounded-xl border border-border/70 p-4 transition-all hover:border-primary/50 hover:bg-muted/30"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-display font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors">
+                      {scheme.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                      {scheme.nameLocal} · <span className="opacity-80">{scheme.authority}</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {scheme.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 text-xs">
+                  <div className="rounded-lg bg-muted/50 p-2.5">
+                    <span className="font-semibold text-foreground/80">Benefit / लाभ:</span>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">{scheme.benefit}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-2.5">
+                    <span className="font-semibold text-foreground/80">Eligibility / पात्रता:</span>
+                    <p className="text-muted-foreground mt-0.5 leading-relaxed">{scheme.eligibility}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/50 pt-3">
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    Verify application details on official site.
+                  </span>
+                  <a
+                    href={scheme.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/95 transition-all shadow-sm cursor-pointer"
+                  >
+                    Apply Online <ExternalLink className="size-3" />
+                  </a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Global info footer */}
+        <div className="mt-2 rounded-xl bg-gradient-to-br from-emerald-500/10 to-primary/5 border border-primary/20 p-4 text-xs space-y-2">
+          <div className="font-semibold text-foreground flex items-center gap-1.5">
+            <Compass className="size-4 text-primary animate-pulse" />
+            Discover more on official myScheme Portal
+          </div>
+          <p className="text-muted-foreground leading-relaxed">
+            The national platform **myScheme** (Government of India) lets you search based on your age, state, land holding, and gender to list all eligible benefits.
+          </p>
+          <div className="pt-2 flex flex-wrap gap-2 justify-between items-center">
+            <a
+              href="https://www.myscheme.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-bold text-primary hover:underline cursor-pointer"
+            >
+              Go to myScheme.gov.in <ExternalLink className="size-3.5" />
+            </a>
+            <Button
+              onClick={() => {
+                onOpenChange(false);
+                onAsk();
+              }}
+              size="sm"
+              className="gap-1.5 h-8 text-[11px]"
+            >
+              Ask Ajrasakha AI about Schemes <Sparkles className="size-3" />
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
