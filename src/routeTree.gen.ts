@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDiagnoseRouteImport } from './routes/_authenticated/diagnose'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -48,6 +49,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDiagnoseRoute = AuthenticatedDiagnoseRouteImport.update({
   id: '/diagnose',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnose': typeof AuthenticatedDiagnoseRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/api/chat': typeof ApiChatRoute
   '/admin/diagnosis': typeof AuthenticatedAdminDiagnosisRoute
   '/admin/golden': typeof AuthenticatedAdminGoldenRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnose': typeof AuthenticatedDiagnoseRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/api/chat': typeof ApiChatRoute
   '/admin/diagnosis': typeof AuthenticatedAdminDiagnosisRoute
   '/admin/golden': typeof AuthenticatedAdminGoldenRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnose': typeof AuthenticatedDiagnoseRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/admin/diagnosis': typeof AuthenticatedAdminDiagnosisRoute
   '/_authenticated/admin/golden': typeof AuthenticatedAdminGoldenRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/diagnose'
+    | '/profile'
     | '/api/chat'
     | '/admin/diagnosis'
     | '/admin/golden'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard'
     | '/diagnose'
+    | '/profile'
     | '/api/chat'
     | '/admin/diagnosis'
     | '/admin/golden'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnose'
+    | '/_authenticated/profile'
     | '/api/chat'
     | '/_authenticated/admin/diagnosis'
     | '/_authenticated/admin/golden'
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/diagnose': {
       id: '/_authenticated/diagnose'
@@ -348,6 +367,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnoseRoute: typeof AuthenticatedDiagnoseRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
 }
 
@@ -355,6 +375,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnoseRoute: AuthenticatedDiagnoseRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
 }
 

@@ -372,7 +372,7 @@ function DashboardPage() {
               icon={<UserRound className="size-5" />}
               title={t("actions.profile")}
               desc={t("actions.profileDesc")}
-              onClick={() => toast.info("Profile settings coming soon")}
+              onClick={() => navigate({ to: "/profile" })}
               accent="soil"
             />
             <QuickAction
